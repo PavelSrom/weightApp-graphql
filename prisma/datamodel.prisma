@@ -1,0 +1,30 @@
+type User {
+  id: ID! @id
+  profile: Profile @relation(name: "ProfileToUser", onDelete: CASCADE)
+  name: String!
+  email: String! @unique
+  password: String!
+}
+
+type Profile {
+  id: ID! @id
+  user: User! @relation(name: "ProfileToUser", onDelete: SET_NULL, link: TABLE)
+  desiredWeight: Int!
+  height: Int!
+  kcalIntake: Int!
+  logs: [Log!]! @relation(name: "LogToUser", onDelete: CASCADE)
+  chosenExercise: Exercise @relation(name: "ExerciseToProfile", onDelete: SET_NULL)
+}
+
+type Exercise {
+  id: ID! @id
+  name: String!
+  kcalHour: Int!
+}
+
+type Log {
+  id: ID! @id
+  user: Profile! @relation(name: "LogToUser", onDelete: SET_NULL)
+  weight: Float!
+  date: String!
+}

@@ -1,0 +1,60 @@
+type Query {
+  verifyToken: Boolean!
+  user: User!
+  profile: Profile!
+  logs: [Log!]!
+  exercises: [Exercise!]!
+}
+
+type Mutation {
+  loginUser(email: String!, password: String!): AuthPayload!
+  createUser(name: String!, email: String!, password: String!): AuthPayload!
+  createProfile(data: CreateProfileInput!): Profile!
+  updateProfile(data: CreateProfileInput!): Profile!
+  deleteUser: User!
+  createLog(weight: Float!, date: String!): Log!
+  updateLog(id: ID!, weight: Float, date: String): Log!
+}
+
+input CreateProfileInput {
+  desiredWeight: Int
+  height: Int
+  kcalIntake: Int
+  chosenExercise: ID
+}
+
+type AuthPayload {
+  user: User!
+  token: String!
+}
+
+type User {
+  id: ID!
+  profile: Profile
+  name: String!
+  email: String!
+  password: String!
+}
+
+type Profile {
+  id: ID!
+  user: User!
+  desiredWeight: Int!
+  height: Int!
+  kcalIntake: Int!
+  logs: [Log!]!
+  chosenExercise: Exercise
+}
+
+type Log {
+  id: ID!
+  user: Profile!
+  weight: Float!
+  date: String!
+}
+
+type Exercise {
+  id: ID!
+  name: String!
+  kcalHour: Int!
+}
