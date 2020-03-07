@@ -1,0 +1,23 @@
+I had a problem where when I had one log added and tried to choose
+an exercise for the very first time, I was redirected to dashboard
+but my statistics weren't showing
+
+I think it's because when I chose the exercise, I updated the profile,
+but in logs I was updating logs alone with the following query:
+query {
+	logs {
+		...
+	}
+}
+
+instead of:
+query {
+	profile {
+		logs {
+			...
+		}
+	}
+}
+
+- now that I use the second example, it works because now both update
+the 'Profile' entity

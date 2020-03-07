@@ -13,7 +13,7 @@ type Mutation {
   updateProfile(data: CreateProfileInput!): Profile!
   deleteUser: User!
   createLog(weight: Float!, date: String!): Log!
-  updateLog(id: ID!, weight: Float, date: String): Log!
+  updateLog(id: ID!, weight: Float!): Log!
 }
 
 input CreateProfileInput {

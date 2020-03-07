@@ -1,12 +1,18 @@
-import React, { Fragment } from 'react'
-import { Link } from 'react-router-dom'
-import { useQuery } from '@apollo/react-hooks'
-import gql from 'graphql-tag'
-import Header from '../components/Header'
-import BottomNav from '../components/BottomNav'
-import Statistics from '../components/Statistics'
-import { Container, Typography, Button, Paper, CircularProgress } from '@material-ui/core'
-import { makeStyles } from '@material-ui/styles'
+import React, { Fragment } from "react"
+import { Link } from "react-router-dom"
+import { useQuery, useMutation, useApolloClient } from "@apollo/react-hooks"
+import gql from "graphql-tag"
+import Header from "../components/Header"
+import BottomNav from "../components/BottomNav"
+import Statistics from "../components/Statistics"
+import {
+  Container,
+  Typography,
+  Button,
+  Paper,
+  CircularProgress
+} from "@material-ui/core"
+import { makeStyles } from "@material-ui/styles"
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -14,41 +20,66 @@ const useStyles = makeStyles(theme => ({
     marginBottom: theme.spacing(3)
   },
   textCentered: {
-    textAlign: 'center'
+    textAlign: "center"
   },
   row: {
-    display: 'flex',
-    justifyContent: 'space-between',
+    display: "flex",
+    justifyContent: "space-between",
     padding: `${theme.spacing(1)}px 0`
   }
 }))
 
-const GET_PROFILE = gql`
+export const GET_PROFILE = gql`
   query {
     user {
       name
       profile {
-        logs {
-          id
-        }
+        id # needed for Apollo to make the update on chosen exercise
+        desiredWeight
+        height
+        kcalIntake
         chosenExercise {
           name
+          kcalHour
+        }
+        logs {
+          id
+          weight
+          date
         }
       }
     }
   }
 `
 
-const Dashboard = () => {
-  // const { name } = useSelector(store => store.auth.user)
-  // const { logs } = useSelector(store => store.logs)
-  // const { profile, loading } = useSelector(store => store.profile)
+const DELETE_USER = gql`
+  mutation DeleteUser {
+    deleteUser {
+      id
+      email
+    }
+  }
+`
 
+const Dashboard = ({ history }) => {
+  const client = useApolloClient()
   const { loading, error, data } = useQuery(GET_PROFILE)
-  console.log(data)
+  const [deleteUser] = useMutation(DELETE_USER, {
+    onCompleted: () => {
+      client.clearStore()
+      history.replace("/")
+      setTimeout(() => {
+        client.writeData({ data: { isAuthenticated: false } })
+      }, 100) // needed
+    }
+  })
+
+  const handleAccountDeletion = () => {
+    const isSure = window.confirm("Are you sure? This action is irreversible!")
+    if (isSure) deleteUser()
+  }
 
   const classes = useStyles()
-
 
   if (loading) return <CircularProgress color="primary" />
   if (error) return <p>Something went wrong :(</p>
@@ -61,7 +92,17 @@ const Dashboard = () => {
           Welcome {data.user.name}!
         </Typography>
 
-        {data && !data.user.profile && (
+        <Button
+          onClick={handleAccountDeletion}
+          fullWidth
+          variant="outlined"
+          className={classes.textCentered}
+          style={{ marginTop: 16 }}
+        >
+          Delete a profile
+        </Button>
+
+        {!data.user.profile ? (
           <div className={classes.textCentered}>
             <Typography variant="body1">
               You have not yet created a profile
@@ -70,9 +111,7 @@ const Dashboard = () => {
               Create a profile
             </Button>
           </div>
-        )}
-
-        {data.user.profile && (
+        ) : (
           <Fragment>
             <Paper className={classes.paper}>
               <div className={classes.row}>
@@ -83,7 +122,9 @@ const Dashboard = () => {
               </div>
               <div className={classes.row}>
                 <Typography variant="body1">Height:</Typography>
-                <Typography variant="body1">{data.user.profile.height}cm</Typography>
+                <Typography variant="body1">
+                  {data.user.profile.height}cm
+                </Typography>
               </div>
               <div className={classes.row}>
                 <Typography variant="body1">Caloric intake:</Typography>
@@ -110,26 +151,29 @@ const Dashboard = () => {
             >
               Update a profile
             </Button>
+
+            <div style={{ textAlign: "center" }}>
+              {data.user.profile.logs && (
+                <Fragment>
+                  {data.user.profile.logs.length > 0 &&
+                    data.user.profile.chosenExercise && (
+                      <Statistics
+                        profile={data.user.profile}
+                        logs={data.user.profile.logs}
+                      />
+                    )}
+                  {(data.user.profile.logs.length === 0 ||
+                    !data.user.profile.chosenExercise) && (
+                    <Typography variant="body1">
+                      Please have at least one log added and choose an exercise
+                      to see statistics
+                    </Typography>
+                  )}
+                </Fragment>
+              )}
+            </div>
           </Fragment>
         )}
-
-        <div style={{ textAlign: 'center' }}>
-          {data.user.profile.logs && data.user.profile.logs.length > 0 && data.user.profile.hasOwnProperty('chosenExercise') && (
-            <Statistics profile={data.user.profile} logs={data.user.profile.logs} />
-          )}
-          {data.user.profile.logs && data.user.profile.logs.length == 0 || !data.user.profile.hasOwnProperty('chosenExercise') && (
-            <Typography variant="body1">
-              Please have at least one log added and choose an exercise to see
-              statistics
-            </Typography>
-          )}
-          {!data.user.profile && (
-            <Typography variant="body1">
-              Please create a profile, choose a favorite exercise and add at
-              least one log to see statistics
-            </Typography>
-          )}
-        </div>
       </Container>
       <BottomNav value={0} />
     </Fragment>

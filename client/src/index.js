@@ -14,7 +14,8 @@ import { createMuiTheme } from "@material-ui/core"
 const theme = createMuiTheme({
   palette: {
     primary: { main: "#40c4ff" },
-    secondary: { main: "#e0e0e0" }
+    secondary: { main: "#e0e0e0" },
+    danger: { main: "#f00" }
   }
 })
 
@@ -23,7 +24,7 @@ const httpLink = createHttpLink({
 })
 
 const authLink = setContext((_, { headers }) => {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem("token")
 
   return {
     headers: {
